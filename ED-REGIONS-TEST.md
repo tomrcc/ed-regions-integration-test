@@ -160,6 +160,8 @@ Added `"@cloudcannon/editable-regions": "github:cloudcannon/editable-regions#fix
 
 Made the config function `async` so it can `await import(...)` the ESM plugin. The CJS wrapper (`index.cjs`) can't `require()` an ESM file, but dynamic `import()` in Node.js resolves the `"import"` export condition correctly.
 
+Also registers `dateToRfc3339`, `dateToRfc822`, `htmlDateString`, and `getNewestCollectionItemDate` server-side. The editable-regions plugin provides browser-side ports for these automatically, but the 11ty build also needs them registered to render any template that uses them at build time (e.g. via `includeWith`). Without this, the build throws `Unknown filter "dateToRfc3339"`.
+
 Added to give a balanced mix of auto-mirror and browser override examples across all three types:
 
 | Registration | Type | Why |

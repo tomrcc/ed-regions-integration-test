@@ -239,6 +239,12 @@
     postcss-load-config "^3.1.0"
     sass "1.62.1"
 
+"@cloudcannon/editable-regions@github:cloudcannon/editable-regions#fix/11ty-follow-up":
+  version "0.0.0"
+  resolved "git+ssh://git@github.com/cloudcannon/editable-regions.git#9d5b68d00e5e06cb8c6be1c0190693a0bce67008"
+  dependencies:
+    esbuild "0.28.0"
+
 "@codemirror/autocomplete@^0.18.0":
   version "0.18.8"
   resolved "https://registry.npmjs.org/@codemirror/autocomplete/-/autocomplete-0.18.8.tgz"
@@ -461,6 +467,11 @@
     "@codemirror/text" "^0.18.1"
     style-mod "^4.0.0"
     w3c-keyname "^2.2.4"
+
+"@esbuild/darwin-arm64@0.28.0":
+  version "0.28.0"
+  resolved "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.28.0.tgz"
+  integrity sha512-0T+A9WZm+bZ84nZBtk1ckYsOvyA3x7e2Acj1KdVfV4/2tdG4fzUp91YHx+GArWLtwqp77pBXVCPn2We7Letr0Q==
 
 "@jridgewell/gen-mapping@^0.3.5":
   version "0.3.12"
@@ -1077,6 +1088,38 @@ esbuild@^0.13.10, esbuild@>=0.9.6:
     esbuild-windows-32 "0.13.15"
     esbuild-windows-64 "0.13.15"
     esbuild-windows-arm64 "0.13.15"
+
+esbuild@0.28.0:
+  version "0.28.0"
+  resolved "https://registry.npmjs.org/esbuild/-/esbuild-0.28.0.tgz"
+  integrity sha512-sNR9MHpXSUV/XB4zmsFKN+QgVG82Cc7+/aaxJ8Adi8hyOac+EXptIp45QBPaVyX3N70664wRbTcLTOemCAnyqw==
+  optionalDependencies:
+    "@esbuild/aix-ppc64" "0.28.0"
+    "@esbuild/android-arm" "0.28.0"
+    "@esbuild/android-arm64" "0.28.0"
+    "@esbuild/android-x64" "0.28.0"
+    "@esbuild/darwin-arm64" "0.28.0"
+    "@esbuild/darwin-x64" "0.28.0"
+    "@esbuild/freebsd-arm64" "0.28.0"
+    "@esbuild/freebsd-x64" "0.28.0"
+    "@esbuild/linux-arm" "0.28.0"
+    "@esbuild/linux-arm64" "0.28.0"
+    "@esbuild/linux-ia32" "0.28.0"
+    "@esbuild/linux-loong64" "0.28.0"
+    "@esbuild/linux-mips64el" "0.28.0"
+    "@esbuild/linux-ppc64" "0.28.0"
+    "@esbuild/linux-riscv64" "0.28.0"
+    "@esbuild/linux-s390x" "0.28.0"
+    "@esbuild/linux-x64" "0.28.0"
+    "@esbuild/netbsd-arm64" "0.28.0"
+    "@esbuild/netbsd-x64" "0.28.0"
+    "@esbuild/openbsd-arm64" "0.28.0"
+    "@esbuild/openbsd-x64" "0.28.0"
+    "@esbuild/openharmony-arm64" "0.28.0"
+    "@esbuild/sunos-x64" "0.28.0"
+    "@esbuild/win32-arm64" "0.28.0"
+    "@esbuild/win32-ia32" "0.28.0"
+    "@esbuild/win32-x64" "0.28.0"
 
 escape-html@^1.0.3, escape-html@~1.0.3:
   version "1.0.3"

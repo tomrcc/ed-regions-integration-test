@@ -10,6 +10,26 @@ module.exports = async function (eleventyConfig) {
     "@cloudcannon/editable-regions/eleventy"
   );
 
+  // --- Built-in browser ports — must also be registered server-side so the
+  //     11ty build can render templates that use them (e.g. via includeWith).
+  //     The editable-regions plugin handles the browser side automatically.
+  eleventyConfig.addFilter("dateToRfc3339", (d) => new Date(d).toISOString());
+  eleventyConfig.addFilter("dateToRfc822", (d) => new Date(d).toUTCString());
+  eleventyConfig.addFilter("htmlDateString", (d) =>
+    new Date(d).toISOString().slice(0, 10),
+  );
+  eleventyConfig.addFilter(
+    "getNewestCollectionItemDate",
+    (collection) => {
+      if (!Array.isArray(collection) || collection.length === 0)
+        return new Date(0);
+      return collection.reduce((newest, item) => {
+        const d = new Date(item?.date ?? 0);
+        return d > newest ? d : newest;
+      }, new Date(0));
+    },
+  );
+
   // --- Existing filters ---
   eleventyConfig.addFilter("length", (input) => input.length);
   eleventyConfig.addFilter("postDate", (dateObj) =>
