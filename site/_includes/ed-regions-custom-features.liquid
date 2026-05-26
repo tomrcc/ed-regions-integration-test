@@ -67,7 +67,7 @@
 
   <div class="test-section">
     <div class="test-section__header">
-      <code>{% year %}</code>
+      <code>{% raw %}{% year %}{% endraw %}</code>
       <span class="tag tag--auto-mirror">auto-mirror</span>
       <span class="tag tag--display-only">display only</span>
     </div>
@@ -77,7 +77,7 @@
 
   <div class="test-section">
     <div class="test-section__header">
-      <code>{% isoDate %}</code>
+      <code>{% raw %}{% isoDate %}{% endraw %}</code>
       <span class="tag tag--override">browser override</span>
       <span class="tag tag--display-only">display only</span>
     </div>
@@ -91,7 +91,7 @@
 
   <div class="test-section">
     <div class="test-section__header">
-      <code>{% callout type %}…{% endcallout %}</code>
+      <code>{% raw %}{% callout type %}…{% endcallout %}{% endraw %}</code>
       <span class="tag tag--auto-mirror">auto-mirror</span>
       <span class="tag tag--edit">edit: calloutType</span>
     </div>
@@ -100,13 +100,13 @@
       This is a <strong>{{ calloutType }}</strong> callout. Its type is driven by the <code>calloutType</code> field — edit it in the sidebar.
     {% endcallout %}
     {% callout "info" %}
-      Literal-string argument: <code>{% callout "info" %}</code>. Type is hardcoded in the template, not user-editable.
+      Literal-string argument: <code>{% raw %}{% callout "info" %}{% endraw %}</code>. Type is hardcoded in the template, not user-editable.
     {% endcallout %}
   </div>
 
   <div class="test-section">
     <div class="test-section__header">
-      <code>{% prose %}…{% endprose %}</code>
+      <code>{% raw %}{% prose %}…{% endprose %}{% endraw %}</code>
       <span class="tag tag--override">browser override</span>
       <span class="tag tag--edit">edit: sampleMarkdown</span>
     </div>
@@ -120,7 +120,7 @@
 
   <div class="test-section">
     <div class="test-section__header">
-      <code>{% icon name %}</code>
+      <code>{% raw %}{% icon name %}{% endraw %}</code>
       <span class="tag tag--override">browser override</span>
       <span class="tag tag--edit">edit: iconName</span>
     </div>
@@ -139,7 +139,7 @@
 
   <div class="test-section">
     <div class="test-section__header">
-      <code>{% includeWith "template", obj %}</code>
+      <code>{% raw %}{% includeWith "template", obj %}{% endraw %}</code>
       <span class="tag tag--builtin">built-in</span>
       <span class="tag tag--edit">edit: dateDisplay</span>
     </div>
