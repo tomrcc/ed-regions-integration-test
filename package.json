@@ -15,6 +15,7 @@
   "author": "CloudCannon",
   "license": "MIT",
   "dependencies": {
+    "@cloudcannon/editable-regions": "github:cloudcannon/editable-regions#fix/11ty-follow-up",
     "@11ty/eleventy": "^3.1.2",
     "@11tyrocks/eleventy-plugin-emoji-readtime": "^1.0.1",
     "@bookshop/eleventy-bookshop": "3.16.3",

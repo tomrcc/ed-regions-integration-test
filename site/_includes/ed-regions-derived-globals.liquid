@@ -1,0 +1,82 @@
+<div class="re-render-probe">
+  <strong>Re-render probe</strong> — edit <code>derivedGlobalsDemo.note</code> in the sidebar and watch this update:
+  <em class="probe-value">{{ note }}</em>
+</div>
+
+<p class="test-group__note">The values below are derived from the CloudCannon API and the build — they are not driven by editable front matter. Confirm they resolve to correct values in the visual editor, and use the re-render probe above to confirm the browser liquid engine is running.</p>
+
+<div class="test-group">
+  <h3 class="test-group__label">page object</h3>
+  <p class="test-group__note">Resolved by the browser proxy against the currently-open file in the Visual Editor. Properties mirror 11ty's <code>page</code> object.</p>
+
+  <div class="test-section">
+    <div class="test-section__header">
+      <code>page.url</code> · <code>page.inputPath</code> · <code>page.fileSlug</code> · etc.
+      <span class="tag tag--proxy">browser proxy</span>
+      <span class="tag tag--display-only">display only</span>
+    </div>
+    <dl class="test-section__output">
+      <dt>page.url</dt>
+      <dd>{{ page.url }}</dd>
+      <dt>page.inputPath</dt>
+      <dd>{{ page.inputPath }}</dd>
+      <dt>page.fileSlug</dt>
+      <dd>{{ page.fileSlug }}</dd>
+      <dt>page.filePathStem</dt>
+      <dd>{{ page.filePathStem }}</dd>
+      <dt>page.outputFileExtension</dt>
+      <dd>{{ page.outputFileExtension }}</dd>
+      <dt>page.outputPath</dt>
+      <dd>{{ page.outputPath }}</dd>
+      <dt>page.date | htmlDateString</dt>
+      <dd>{{ page.date | htmlDateString }}</dd>
+      <dt>page.date | dateToRfc3339</dt>
+      <dd>{{ page.date | dateToRfc3339 }}</dd>
+    </dl>
+  </div>
+</div>
+
+<div class="test-group">
+  <h3 class="test-group__label">collections.blog</h3>
+  <p class="test-group__note">Resolved lazily by the browser proxy from the CloudCannon API. In the Visual Editor, this fetches the blog collection from CMS data. Items should match the blog posts in <code>site/blog/</code>.</p>
+
+  <div class="test-section">
+    <div class="test-section__header">
+      <code>collections.blog</code> iteration · <code>getNewestCollectionItemDate</code>
+      <span class="tag tag--proxy">browser proxy</span>
+      <span class="tag tag--display-only">display only</span>
+    </div>
+    <ul class="test-section__output">
+      {% for post in collections.blog %}
+      <li>
+        <a href="{{ post.url }}">{{ post.data.title }}</a>
+        — <time datetime="{{ post.date | dateToRfc3339 }}">{{ post.date | htmlDateString }}</time>
+        <small>(slug: <code>{{ post.fileSlug }}</code>)</small>
+      </li>
+      {% endfor %}
+    </ul>
+    <p>Newest post date: <code>{{ collections.blog | getNewestCollectionItemDate | dateToRfc822 }}</code></p>
+  </div>
+</div>
+
+<div class="test-group">
+  <h3 class="test-group__label">eleventy global</h3>
+  <p class="test-group__note">Embedded as static data in the browser bundle at build time. Values reflect the build that generated <code>register-components.js</code>.</p>
+
+  <div class="test-section">
+    <div class="test-section__header">
+      <code>eleventy.version</code> · <code>eleventy.generator</code> · <code>eleventy.env</code> · <code>eleventy.directories</code>
+      <span class="tag tag--static">static (build-time)</span>
+      <span class="tag tag--display-only">display only</span>
+    </div>
+    <dl class="test-section__output">
+      <dt>eleventy.version</dt><dd>{{ eleventy.version }}</dd>
+      <dt>eleventy.generator</dt><dd>{{ eleventy.generator }}</dd>
+      <dt>eleventy.env.runMode</dt><dd>{{ eleventy.env.runMode }}</dd>
+      <dt>eleventy.env.source</dt><dd>{{ eleventy.env.source }}</dd>
+      <dt>eleventy.directories.input</dt><dd>{{ eleventy.directories.input }}</dd>
+      <dt>eleventy.directories.includes</dt><dd>{{ eleventy.directories.includes }}</dd>
+      <dt>eleventy.directories.output</dt><dd>{{ eleventy.directories.output }}</dd>
+    </dl>
+  </div>
+</div>

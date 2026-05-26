@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1.5rem; color: #222; }
+    h1 { border-bottom: 3px solid #333; padding-bottom: .5rem; }
+    a { color: #0066cc; }
+
+    /* Editable block wrappers */
+    .editable-block { border: 2px dashed #aaa; border-radius: 6px; padding: 1rem 1.5rem; margin-bottom: 2rem; }
+    .editable-block + .editable-block { margin-top: 2rem; }
+    .block-label { font-size: 1.1rem; margin: 0 0 1rem; color: #555; }
+    .block-label small { font-size: .8rem; font-weight: normal; color: #888; }
+
+    /* Re-render probe */
+    .re-render-probe { background: #fffbe6; border: 1px solid #ffe58f; border-radius: 4px; padding: .6rem 1rem; margin-bottom: 1.5rem; font-size: .9rem; }
+    .probe-value { color: #d46b08; }
+
+    /* Test groups */
+    .test-group { margin-bottom: 1.5rem; }
+    .test-group__label { font-size: .85rem; text-transform: uppercase; letter-spacing: .08em; color: #666; border-bottom: 1px solid #ddd; padding-bottom: .25rem; margin-bottom: .75rem; }
+    .test-group__note { font-size: .85rem; color: #666; margin: 0 0 .75rem; font-style: italic; }
+
+    /* Individual test sections */
+    .test-section { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 4px; padding: .75rem 1rem; margin-bottom: .75rem; }
+    .test-section__header { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-bottom: .4rem; font-family: monospace; font-size: .95rem; font-weight: bold; }
+    .test-section__desc { font-size: .8rem; color: #666; margin: .3rem 0 .6rem; }
+    .test-section__output { background: #fff; border: 1px solid #ddd; border-radius: 3px; padding: .4rem .6rem; font-family: monospace; font-size: .9rem; }
+    .test-section__output dl { margin: 0; }
+    .test-section__output dt { font-weight: bold; margin-top: .4rem; color: #555; }
+    .test-section__output dd { margin-left: 1rem; color: #222; }
+    .test-section__raw { font-size: .75rem; color: #999; margin-top: .3rem; }
+    .test-section__output ul { margin: 0; padding-left: 1.25rem; }
+    .test-section__output li { margin: .2rem 0; }
+
+    /* Tag badges */
+    .tag { display: inline-block; font-size: .65rem; font-weight: bold; text-transform: uppercase; letter-spacing: .04em; padding: .1rem .4rem; border-radius: 3px; vertical-align: middle; font-family: system-ui, sans-serif; }
+    .tag--auto-mirror  { background: #d4edda; color: #155724; }
+    .tag--override     { background: #cce5ff; color: #004085; }
+    .tag--proxy        { background: #fff3cd; color: #856404; }
+    .tag--static       { background: #f8d7da; color: #721c24; }
+    .tag--builtin      { background: #e2d9f3; color: #432874; }
+    .tag--display-only { background: #e2e3e5; color: #383d41; }
+    .tag--edit         { background: #d1ecf1; color: #0c5460; font-family: monospace; text-transform: none; letter-spacing: 0; }
+
+    /* Callout (rendered by the paired shortcode) */
+    .callout { border-left: 4px solid; padding: .5rem 1rem; margin: .5rem 0; border-radius: 0 4px 4px 0; }
+    .callout--info    { border-color: #4a90d9; background: #e8f0fb; }
+    .callout--warning { border-color: #e6a817; background: #fdf5e0; }
+    .callout--error   { border-color: #d94a4a; background: #fbe8e8; }
+
+    /* Icon spans (rendered by the custom tag) */
+    .icon::before { content: "[icon: " attr(class) "]"; font-style: italic; color: #888; font-family: system-ui, sans-serif; font-size: .85rem; }
+  </style>
+</head>
+<body>
+  <h1>{{ title }}</h1>
+  {{ content }}
+  <script type="module" src="/register-components.js"></script>
+</body>
+</html>

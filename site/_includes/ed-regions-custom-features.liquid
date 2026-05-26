@@ -1,0 +1,192 @@
+<div class="re-render-probe">
+  <strong>Re-render probe</strong> — edit <code>customFeaturesDemo.note</code> in the sidebar and watch this update:
+  <em class="probe-value">{{ note }}</em>
+</div>
+
+<div class="test-group">
+  <h3 class="test-group__label">Filters</h3>
+
+  <div class="test-section">
+    <div class="test-section__header">
+      <code>excerpt</code>
+      <span class="tag tag--auto-mirror">auto-mirror</span>
+      <span class="tag tag--edit">edit: sampleText</span>
+    </div>
+    <p class="test-section__desc">Pure function — no imports. Should auto-mirror into the browser bundle without any override.</p>
+    <div class="test-section__output">{{ sampleText | excerpt: 60 }}</div>
+    <div class="test-section__raw">Input (first 60 chars): <code>sampleText | excerpt: 60</code></div>
+  </div>
+
+  <div class="test-section">
+    <div class="test-section__header">
+      <code>length</code>
+      <span class="tag tag--auto-mirror">auto-mirror</span>
+      <span class="tag tag--edit">edit: sampleText</span>
+    </div>
+    <p class="test-section__desc">Pure function — no imports. Should auto-mirror.</p>
+    <div class="test-section__output">{{ sampleText | length }}</div>
+    <div class="test-section__raw">Expression: <code>sampleText | length</code></div>
+  </div>
+
+  <div class="test-section">
+    <div class="test-section__header">
+      <code>wordCount</code>
+      <span class="tag tag--override">browser override</span>
+      <span class="tag tag--edit">edit: sampleText</span>
+    </div>
+    <p class="test-section__desc">Server-side function references module-local helpers (<code>htmlToPlainText</code>, <code>plainTextMetadata</code>) that don't survive serialization. Override: <code>overrides/wordcount-filter.mjs</code></p>
+    <div class="test-section__output">{{ sampleText | wordCount }}</div>
+    <div class="test-section__raw">Expression: <code>sampleText | wordCount</code></div>
+  </div>
+
+  <div class="test-section">
+    <div class="test-section__header">
+      <code>postDate</code>
+      <span class="tag tag--override">browser override</span>
+      <span class="tag tag--edit">edit: sampleDate</span>
+    </div>
+    <p class="test-section__desc">Server-side uses Luxon's <code>DateTime.fromJSDate</code> — not available in browser. Override uses <code>Intl.DateTimeFormat</code> to match the DATE_MED output format. Override: <code>overrides/postdate-filter.mjs</code></p>
+    <div class="test-section__output">{{ sampleDate | postDate }}</div>
+    <div class="test-section__raw">Expression: <code>sampleDate | postDate</code></div>
+  </div>
+
+  <div class="test-section">
+    <div class="test-section__header">
+      <code>markdownify</code>
+      <span class="tag tag--override">browser override</span>
+      <span class="tag tag--edit">edit: sampleMarkdown</span>
+    </div>
+    <p class="test-section__desc">Server-side closes over a <code>MarkdownIt</code> instance — not serializable. Browser override covers inline formatting patterns. Override: <code>overrides/markdownify-filter.mjs</code></p>
+    <div class="test-section__output">{{ sampleMarkdown | markdownify }}</div>
+    <div class="test-section__raw">Expression: <code>sampleMarkdown | markdownify</code></div>
+  </div>
+</div>
+
+<div class="test-group">
+  <h3 class="test-group__label">Shortcodes</h3>
+
+  <div class="test-section">
+    <div class="test-section__header">
+      <code>{% year %}</code>
+      <span class="tag tag--auto-mirror">auto-mirror</span>
+      <span class="tag tag--display-only">display only</span>
+    </div>
+    <p class="test-section__desc">Pure function, no closure over any import. Should auto-mirror into the browser bundle without any override.</p>
+    <div class="test-section__output">Copyright {% year %} CloudCannon</div>
+  </div>
+
+  <div class="test-section">
+    <div class="test-section__header">
+      <code>{% isoDate %}</code>
+      <span class="tag tag--override">browser override</span>
+      <span class="tag tag--display-only">display only</span>
+    </div>
+    <p class="test-section__desc">Closes over Luxon's <code>DateTime</code> — not available in the browser bundle. Override: <code>overrides/isodate-shortcode.mjs</code> (uses <code>new Date().toISOString()</code> instead). Output will differ slightly between server and browser (build time vs. render time), which is expected.</p>
+    <div class="test-section__output">{% isoDate %}</div>
+  </div>
+</div>
+
+<div class="test-group">
+  <h3 class="test-group__label">Paired Shortcodes</h3>
+
+  <div class="test-section">
+    <div class="test-section__header">
+      <code>{% callout type %}…{% endcallout %}</code>
+      <span class="tag tag--auto-mirror">auto-mirror</span>
+      <span class="tag tag--edit">edit: calloutType</span>
+    </div>
+    <p class="test-section__desc">Pure function, no closure over any import. Should auto-mirror. Valid values for <code>calloutType</code>: <code>info</code>, <code>warning</code>, <code>error</code>.</p>
+    {% callout calloutType %}
+      This is a <strong>{{ calloutType }}</strong> callout. Its type is driven by the <code>calloutType</code> field — edit it in the sidebar.
+    {% endcallout %}
+    {% callout "info" %}
+      Literal-string argument: <code>{% callout "info" %}</code>. Type is hardcoded in the template, not user-editable.
+    {% endcallout %}
+  </div>
+
+  <div class="test-section">
+    <div class="test-section__header">
+      <code>{% prose %}…{% endprose %}</code>
+      <span class="tag tag--override">browser override</span>
+      <span class="tag tag--edit">edit: sampleMarkdown</span>
+    </div>
+    <p class="test-section__desc">Closes over the <code>md</code> (markdown-it) instance — not serializable. Override: <code>overrides/prose-shortcode.mjs</code> (inline implementation covering bold, italic, code spans). Edit <code>sampleMarkdown</code> and confirm the rendered HTML updates.</p>
+    {% prose %}{{ sampleMarkdown }}{% endprose %}
+  </div>
+</div>
+
+<div class="test-group">
+  <h3 class="test-group__label">Custom Tag</h3>
+
+  <div class="test-section">
+    <div class="test-section__header">
+      <code>{% icon name %}</code>
+      <span class="tag tag--override">browser override</span>
+      <span class="tag tag--edit">edit: iconName</span>
+    </div>
+    <p class="test-section__desc">Custom Liquid tag. Server-side uses an inline factory; browser-side registered via <code>liquid.tags.icon → overrides/icon-tag.mjs</code>. Renders a <code>&lt;span class="icon icon-{name}"&gt;</code>. Change <code>iconName</code> in the sidebar and confirm the class updates.</p>
+    <div class="test-section__output">
+      Variable arg (resolves <code>iconName</code>): {% icon iconName %}
+    </div>
+    <div class="test-section__output">
+      Literal arg: {% icon "envelope" %}
+    </div>
+  </div>
+</div>
+
+<div class="test-group">
+  <h3 class="test-group__label">includeWith tag</h3>
+
+  <div class="test-section">
+    <div class="test-section__header">
+      <code>{% includeWith "template", obj %}</code>
+      <span class="tag tag--builtin">built-in</span>
+      <span class="tag tag--edit">edit: dateDisplay</span>
+    </div>
+    <p class="test-section__desc">
+      The sub-partial below is rendered by <code>{% raw %}{% includeWith "ed-regions-date-display", dateDisplay %}{% endraw %}</code>
+      <em>inside this component template</em>, so it runs through the browser liquid engine on every re-render.
+      Edit <code>customFeaturesDemo.dateDisplay.date</code> or <code>.label</code> in the sidebar and confirm the sub-partial updates.
+    </p>
+    <div class="test-section__output">
+      {% includeWith "ed-regions-date-display", dateDisplay %}
+    </div>
+  </div>
+</div>
+
+<div class="test-group">
+  <h3 class="test-group__label">Built-in browser ports — date filters</h3>
+  <p class="test-group__note">These are Eleventy's built-in date filters. The browser bundle ships handwritten ports for them — no auto-mirror, no override needed. Edit <code>sampleDate</code> and confirm all four update.</p>
+
+  <div class="test-section">
+    <div class="test-section__header">
+      <code>dateToRfc3339</code> · <code>dateToRfc822</code> · <code>htmlDateString</code> · <code>postDate</code>
+      <span class="tag tag--builtin">built-in port</span>
+      <span class="tag tag--edit">edit: sampleDate</span>
+    </div>
+    <dl class="test-section__output">
+      <dt>sampleDate | dateToRfc3339</dt><dd>{{ sampleDate | dateToRfc3339 }}</dd>
+      <dt>sampleDate | dateToRfc822</dt><dd>{{ sampleDate | dateToRfc822 }}</dd>
+      <dt>sampleDate | htmlDateString</dt><dd>{{ sampleDate | htmlDateString }}</dd>
+      <dt>sampleDate | postDate (browser override)</dt><dd>{{ sampleDate | postDate }}</dd>
+    </dl>
+  </div>
+</div>
+
+<div class="test-group">
+  <h3 class="test-group__label">Built-in browser ports — slug &amp; url filters</h3>
+  <p class="test-group__note">Inputs are hardcoded literals — display only. Confirm the outputs match what the 11ty build would produce.</p>
+
+  <div class="test-section">
+    <div class="test-section__header">
+      <code>slug</code> · <code>slugify</code> · <code>url</code>
+      <span class="tag tag--builtin">built-in port</span>
+      <span class="tag tag--display-only">display only</span>
+    </div>
+    <dl class="test-section__output">
+      <dt>"Hello World &amp; More" | slug</dt><dd>{{ "Hello World & More" | slug }}</dd>
+      <dt>"Hello World &amp; More" | slugify</dt><dd>{{ "Hello World & More" | slugify }}</dd>
+      <dt>"/some/path/" | url</dt><dd>{{ "/some/path/" | url }}</dd>
+    </dl>
+  </div>
+</div>

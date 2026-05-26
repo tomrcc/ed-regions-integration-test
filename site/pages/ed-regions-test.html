@@ -1,0 +1,46 @@
+---
+title: Editable Regions Integration Test
+permalink: /ed-regions-test/
+layout: layouts/test-shell.liquid
+date: 2024-06-15
+customFeaturesDemo:
+  note: "Edit me to confirm the browser liquid engine re-renders"
+  sampleText: "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua"
+  sampleDate: "2023-11-22"
+  sampleMarkdown: "**Bold text**, _italic text_, and `inline code`"
+  calloutType: "warning"
+  iconName: "star"
+  dateDisplay:
+    date: "2026-03-15"
+    label: "Passed into a sub-partial via includeWith inside the browser engine"
+derivedGlobalsDemo:
+  note: "Edit me to confirm the proxy values re-render correctly"
+---
+
+<section class="editable-block">
+  <h2 class="block-label">
+    Block 1: Custom Features
+    <small>(filters · shortcodes · paired shortcodes · custom tags · includeWith)</small>
+  </h2>
+  <div
+    data-editable="component"
+    data-component="ed-regions-custom-features"
+    data-prop="customFeaturesDemo"
+  >
+    {% includeWith "ed-regions-custom-features", customFeaturesDemo %}
+  </div>
+</section>
+
+<section class="editable-block">
+  <h2 class="block-label">
+    Block 2: Derived Globals
+    <small>(page object · collections · eleventy)</small>
+  </h2>
+  <div
+    data-editable="component"
+    data-component="ed-regions-derived-globals"
+    data-prop="derivedGlobalsDemo"
+  >
+    {% includeWith "ed-regions-derived-globals", derivedGlobalsDemo %}
+  </div>
+</section>
