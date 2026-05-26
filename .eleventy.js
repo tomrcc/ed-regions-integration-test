@@ -4,11 +4,9 @@ const emojiReadTime = require("@11tyrocks/eleventy-plugin-emoji-readtime");
 const { wordCountCallback } = require("./site/js/wordCount");
 const MarkdownIt = require("markdown-it"),
   md = new MarkdownIt({ html: true });
+const editableRegions = require("@cloudcannon/editable-regions/eleventy");
 
-module.exports = async function (eleventyConfig) {
-  const { default: editableRegions } = await import(
-    "@cloudcannon/editable-regions/eleventy"
-  );
+module.exports = function (eleventyConfig) {
 
   // --- Built-in browser ports — must also be registered server-side so the
   //     11ty build can render templates that use them (e.g. via includeWith).
