@@ -45,3 +45,97 @@ derivedGlobalsDemo:
     {% includeWith "ed-regions-derived-globals", derivedGlobalsDemo %}
   </div>
 </section>
+
+<section class="editable-block" id="api-debug-section">
+  <h2 class="block-label">CloudCannon API Debug <small>(remove before ship)</small></h2>
+  <pre id="api-debug-output" style="font-size:0.75rem;white-space:pre-wrap;background:#1e1e1e;color:#d4d4d4;padding:1rem;border-radius:4px">Waiting for CloudCannon API...</pre>
+</section>
+
+<script type="module">
+  async function runDebug() {
+    const out = document.getElementById('api-debug-output');
+    if (!out) return;
+
+    const lines = [];
+
+    const ccApi = window.CloudCannonAPI;
+    lines.push(`window.CloudCannonAPI: ${typeof ccApi}`);
+
+    if (!ccApi) {
+      lines.push('→ API not present. Not inside the CloudCannon Visual Editor?');
+      out.textContent = lines.join('\n');
+      return;
+    }
+
+    lines.push(`CloudCannonAPI keys: ${Object.keys(ccApi).join(', ')}`);
+
+    let api;
+    try {
+      api = ccApi.useVersion('v1', true);
+      lines.push(`useVersion('v1') succeeded`);
+      lines.push(`api keys: ${Object.keys(api).join(', ')}`);
+    } catch (e) {
+      lines.push(`useVersion('v1') threw: ${e.message}`);
+      out.textContent = lines.join('\n');
+      return;
+    }
+
+    // currentFile
+    lines.push('');
+    lines.push('--- currentFile() ---');
+    lines.push(`typeof api.currentFile: ${typeof api.currentFile}`);
+    if (typeof api.currentFile === 'function') {
+      try {
+        const file = api.currentFile();
+        lines.push(`currentFile() returned: ${file == null ? String(file) : typeof file}`);
+        if (file) {
+          lines.push(`file keys: ${Object.keys(file).join(', ')}`);
+          lines.push(`file.path: ${file.path}`);
+          lines.push(`typeof file.data: ${typeof file.data}`);
+          if (file.data && typeof file.data.get === 'function') {
+            const data = await file.data.get();
+            lines.push(`file.data.get() keys: ${data ? Object.keys(data).join(', ') : String(data)}`);
+          } else {
+            lines.push(`file.data shape: ${JSON.stringify(file.data)?.slice(0, 200)}`);
+          }
+        }
+      } catch (e) {
+        lines.push(`currentFile() threw: ${e.message}`);
+      }
+    }
+
+    // collection
+    lines.push('');
+    lines.push('--- collection("blog") ---');
+    lines.push(`typeof api.collection: ${typeof api.collection}`);
+    if (typeof api.collection === 'function') {
+      try {
+        const col = api.collection('blog');
+        lines.push(`collection('blog') returned: ${col == null ? String(col) : typeof col}`);
+        if (col) {
+          lines.push(`collection keys: ${Object.keys(col).join(', ')}`);
+          lines.push(`typeof col.items: ${typeof col.items}`);
+          if (typeof col.items === 'function') {
+            const items = await col.items();
+            lines.push(`items count: ${Array.isArray(items) ? items.length : typeof items}`);
+            if (Array.isArray(items) && items.length > 0) {
+              const first = items[0];
+              lines.push(`first item keys: ${Object.keys(first).join(', ')}`);
+              lines.push(`first item path: ${first.path}`);
+            }
+          }
+        }
+      } catch (e) {
+        lines.push(`collection('blog') threw: ${e.message}`);
+      }
+    }
+
+    out.textContent = lines.join('\n');
+  }
+
+  if (window.CloudCannonAPI) {
+    runDebug();
+  } else {
+    document.addEventListener('cloudcannon:load', runDebug, { once: true });
+  }
+</script>
