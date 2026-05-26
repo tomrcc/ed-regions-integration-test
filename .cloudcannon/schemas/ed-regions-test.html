@@ -1,0 +1,64 @@
+---
+title:
+permalink:
+layout: layouts/test-shell.liquid
+date: 2024-06-15
+customFeaturesDemo:
+  note:
+  sampleText:
+  sampleDate:
+  sampleMarkdown:
+  calloutType:
+  iconName:
+  dateDisplay:
+    date:
+    label:
+derivedGlobalsDemo:
+  note:
+_inputs:
+  layout:
+    hidden: true
+  date:
+    type: date
+  customFeaturesDemo:
+    type: object
+    comment: Data for Block 1 — Custom Features
+  customFeaturesDemo.note:
+    type: text
+    comment: Edit to confirm Block 1 re-renders in the browser liquid engine
+  customFeaturesDemo.sampleText:
+    type: textarea
+    comment: Drives excerpt, length, and wordCount outputs
+  customFeaturesDemo.sampleDate:
+    type: date
+    comment: Drives postDate, dateToRfc3339, dateToRfc822, and htmlDateString outputs
+  customFeaturesDemo.sampleMarkdown:
+    type: markdown
+    comment: Drives markdownify and prose outputs
+  customFeaturesDemo.calloutType:
+    type: select
+    comment: CSS modifier class on the variable-arg callout (callout--{type})
+    options:
+      values:
+        - info
+        - warning
+        - error
+  customFeaturesDemo.iconName:
+    type: text
+    comment: Icon class on the variable-arg icon tag (icon-{name})
+  customFeaturesDemo.dateDisplay:
+    type: object
+    comment: Props passed to the ed-regions-date-display sub-partial via includeWith
+  customFeaturesDemo.dateDisplay.date:
+    type: date
+    comment: Drives all four date formats in the sub-partial
+  customFeaturesDemo.dateDisplay.label:
+    type: text
+    comment: Label text displayed above the date outputs in the sub-partial
+  derivedGlobalsDemo:
+    type: object
+    comment: Data for Block 2 — Derived Globals (re-render probe only)
+  derivedGlobalsDemo.note:
+    type: text
+    comment: Edit to confirm Block 2 proxy values re-render correctly
+---
