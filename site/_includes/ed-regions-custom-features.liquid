@@ -42,10 +42,10 @@
   <div class="test-section">
     <div class="test-section__header">
       <code>wordCount</code>
-      <span class="tag tag--override">browser override</span>
+      <span class="tag tag--auto-mirror">auto-mirror</span>
       <span class="tag tag--edit">edit: sampleText</span>
     </div>
-    <p class="test-section__desc">Server-side function references module-local helpers (<code>htmlToPlainText</code>, <code>plainTextMetadata</code>) that don't survive serialization. Override: <code>overrides/wordcount-filter.mjs</code></p>
+    <p class="test-section__desc">Imports a local module (<code>site/js/wordCount.js</code>) whose helpers (<code>htmlToPlainText</code>, <code>plainTextMetadata</code>) are pure string ops. Config-replay bundles that module, so it auto-mirrors — no override.</p>
     <div class="test-section__output">{{ sampleText | wordCount }}</div>
     <div class="test-section__raw">Expression: <code>sampleText | wordCount</code></div>
   </div>
@@ -53,10 +53,10 @@
   <div class="test-section">
     <div class="test-section__header">
       <code>postDate</code>
-      <span class="tag tag--override">browser override</span>
+      <span class="tag tag--auto-mirror">auto-mirror</span>
       <span class="tag tag--edit">edit: sampleDate</span>
     </div>
-    <p class="test-section__desc">Server-side uses Luxon's <code>DateTime.fromJSDate</code> — not available in browser. Override uses <code>Intl.DateTimeFormat</code> to match the DATE_MED output format. Override: <code>overrides/postdate-filter.mjs</code></p>
+    <p class="test-section__desc">Uses Luxon's <code>DateTime</code>. Luxon is a plain npm package that bundles for the browser, so it auto-mirrors — no override. The server and browser renders must be identical (locale pinned to <code>en-US</code>).</p>
     <div class="test-section__output">{{ sampleDate | postDate }}</div>
     <div class="test-section__raw">Expression: <code>sampleDate | postDate</code></div>
   </div>
@@ -64,12 +64,23 @@
   <div class="test-section">
     <div class="test-section__header">
       <code>markdownify</code>
-      <span class="tag tag--override">browser override</span>
+      <span class="tag tag--auto-mirror">auto-mirror</span>
       <span class="tag tag--edit">edit: sampleMarkdown</span>
     </div>
-    <p class="test-section__desc">Server-side closes over a <code>MarkdownIt</code> instance — not serializable. Browser override covers inline formatting patterns. Override: <code>overrides/markdownify-filter.mjs</code></p>
+    <p class="test-section__desc">Closes over a module-level <code>markdown-it</code> instance. Both the closure and markdown-it itself survive bundling, so it auto-mirrors — no override. Browser output matches the full markdown-it render, not just inline patterns.</p>
     <div class="test-section__output">{{ sampleMarkdown | markdownify }}</div>
     <div class="test-section__raw">Expression: <code>sampleMarkdown | markdownify</code></div>
+  </div>
+
+  <div class="test-section">
+    <div class="test-section__header">
+      <code>fileSize</code>
+      <span class="tag tag--override">browser override (required)</span>
+      <span class="tag tag--display-only">display only</span>
+    </div>
+    <p class="test-section__desc">The one genuine override case. Server-side calls <code>fs.statSync</code> to read a file size from disk; <code>node:fs</code> is stubbed in the browser bundle and can't run there, so this <em>requires</em> a browser override (<code>overrides/filesize-filter.mjs</code>). Server shows a byte count; the browser shows the placeholder <code>— (server-only)</code>.</p>
+    <div class="test-section__output">{{ "package.json" | fileSize }}</div>
+    <div class="test-section__raw">Expression: <code>"package.json" | fileSize</code></div>
   </div>
 </div>
 
@@ -89,10 +100,10 @@
   <div class="test-section">
     <div class="test-section__header">
       <code>{% raw %}{% isoDate %}{% endraw %}</code>
-      <span class="tag tag--override">browser override</span>
+      <span class="tag tag--auto-mirror">auto-mirror</span>
       <span class="tag tag--display-only">display only</span>
     </div>
-    <p class="test-section__desc">Closes over Luxon's <code>DateTime</code> — not available in the browser bundle. Override: <code>overrides/isodate-shortcode.mjs</code> (uses <code>new Date().toISOString()</code> instead). Output will differ slightly between server and browser (build time vs. render time), which is expected.</p>
+    <p class="test-section__desc">Uses Luxon's <code>DateTime.now()</code>. Luxon bundles for the browser, so it auto-mirrors — no override. Output differs between server (build time) and browser (render time), which is expected for a clock value.</p>
     <div class="test-section__output">{% isoDate %}</div>
   </div>
 </div>
@@ -118,10 +129,10 @@
   <div class="test-section">
     <div class="test-section__header">
       <code>{% raw %}{% prose %}…{% endprose %}{% endraw %}</code>
-      <span class="tag tag--override">browser override</span>
+      <span class="tag tag--auto-mirror">auto-mirror</span>
       <span class="tag tag--edit">edit: sampleMarkdown</span>
     </div>
-    <p class="test-section__desc">Closes over the <code>md</code> (markdown-it) instance — not serializable. Override: <code>overrides/prose-shortcode.mjs</code> (inline implementation covering bold, italic, code spans). Edit <code>sampleMarkdown</code> and confirm the rendered HTML updates.</p>
+    <p class="test-section__desc">Closes over the same module-level <code>markdown-it</code> instance as <code>markdownify</code>; both the closure and markdown-it bundle for the browser, so it auto-mirrors — no override. Edit <code>sampleMarkdown</code> and confirm the rendered HTML updates.</p>
     {% prose %}{{ sampleMarkdown }}{% endprose %}
   </div>
 </div>
@@ -132,10 +143,10 @@
   <div class="test-section">
     <div class="test-section__header">
       <code>{% raw %}{% icon name %}{% endraw %}</code>
-      <span class="tag tag--override">browser override</span>
+      <span class="tag tag--auto-mirror">auto-mirror</span>
       <span class="tag tag--edit">edit: iconName</span>
     </div>
-    <p class="test-section__desc">Custom Liquid tag. Server-side uses an inline factory; browser-side registered via <code>liquid.tags.icon → overrides/icon-tag.mjs</code>. Renders a <code>&lt;span class="icon icon-{name}"&gt;</code>. Change <code>iconName</code> in the sidebar and confirm the class updates.</p>
+    <p class="test-section__desc">Custom Liquid tag registered with <code>addLiquidTag</code>, which is mirrored like any other helper. The factory uses liquidjs's <code>Tokenizer</code>/<code>evalToken</code> (pulled via <code>require</code>; liquidjs bundles for the browser), so the same factory runs server- and browser-side — no override. Renders a <code>&lt;span class="icon icon-{name}"&gt;</code>. Change <code>iconName</code> and confirm the class updates.</p>
     <div class="test-section__output">
       Variable arg (resolves <code>iconName</code>): {% icon iconName %}
     </div>
@@ -179,7 +190,7 @@
       <dt>sampleDate | dateToRfc3339</dt><dd>{{ sampleDate | dateToRfc3339 }}</dd>
       <dt>sampleDate | dateToRfc822</dt><dd>{{ sampleDate | dateToRfc822 }}</dd>
       <dt>sampleDate | htmlDateString</dt><dd>{{ sampleDate | htmlDateString }}</dd>
-      <dt>sampleDate | postDate (browser override)</dt><dd>{{ sampleDate | postDate }}</dd>
+      <dt>sampleDate | postDate (auto-mirror)</dt><dd>{{ sampleDate | postDate }}</dd>
     </dl>
   </div>
 </div>

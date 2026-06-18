@@ -24,16 +24,18 @@ Open this page in the CloudCannon Visual Editor to test all features. The page h
 | `excerpt` | auto-mirror | `sampleText` | First 60 chars of text, truncated with `…` |
 | `length` | auto-mirror | `sampleText` | Character count of the string |
 | `stamp` | auto-mirror (closure) | `sampleText` | `sampleText` with a `[build-closure-ok]` suffix |
-| `wordCount` | browser override | `sampleText` | Word count of the string |
-| `postDate` | browser override | `sampleDate` | Date in `MMM D, YYYY` format (e.g. `Nov 22, 2023`) |
-| `markdownify` | browser override | `sampleMarkdown` | Rendered HTML — bold, italic, code |
+| `wordCount` | auto-mirror (local-module import) | `sampleText` | Word count of the string |
+| `postDate` | auto-mirror (Luxon import) | `sampleDate` | Date in `MMM D, YYYY` format (e.g. `Nov 22, 2023`) |
+| `markdownify` | auto-mirror (markdown-it import) | `sampleMarkdown` | Rendered HTML — bold, italic, code |
+| `fileSize` | **browser override (required)** | display only | Server: a byte count; browser: `— (server-only)` |
 
 - [ ] `excerpt` renders a truncated version of `sampleText`
 - [ ] `length` renders a number matching the character count of `sampleText`
 - [ ] `stamp` renders `sampleText` followed by `[build-closure-ok]` — and the browser re-render matches the server output (proves the closure over the module-level `buildInfo` survived auto-mirror; under `fn.toString()` the browser re-render would break)
-- [ ] `wordCount` renders a number matching the word count of `sampleText`
-- [ ] `postDate` renders `sampleDate` formatted as `Nov 22, 2023` (or equivalent)
-- [ ] `markdownify` renders `**bold**` as `<strong>bold</strong>`, `_italic_` as `<em>italic</em>`, `` `code` `` as `<code>code</code>`
+- [ ] `wordCount` renders a number matching the word count of `sampleText`, and the browser re-render matches the server (proves a local-module import auto-mirrors)
+- [ ] `postDate` renders `sampleDate` formatted as `Nov 22, 2023`, **identical** server and browser (proves an npm import — Luxon — auto-mirrors; locale pinned to `en-US`)
+- [ ] `markdownify` renders `**bold**` as `<strong>bold</strong>`, `_italic_` as `<em>italic</em>`, `` `code` `` as `<code>code</code>` — server and browser identical (proves the markdown-it import auto-mirrors)
+- [ ] `fileSize` renders a byte count server-side and the placeholder `— (server-only)` in the editor (the one genuine override — `fs.statSync` can't run in the browser)
 - [ ] Edit `sampleText` → `excerpt`, `length`, `stamp`, and `wordCount` all update
 - [ ] Edit `sampleDate` → `postDate` updates
 - [ ] Edit `sampleMarkdown` → `markdownify` output updates
@@ -43,7 +45,7 @@ Open this page in the CloudCannon Visual Editor to test all features. The page h
 | Shortcode | Type | Notes |
 |-----------|------|-------|
 | `year` | auto-mirror | Pure function — display only |
-| `isoDate` | browser override | Closes over Luxon `DateTime` — display only |
+| `isoDate` | auto-mirror (Luxon import) | Uses Luxon `DateTime` — display only |
 
 - [ ] `{% year %}` renders a 4-digit current year
 - [ ] `{% isoDate %}` renders an ISO 8601 timestamp — the value will differ between the server render (build time) and the browser render (re-render time), which is expected behaviour
@@ -54,7 +56,7 @@ Open this page in the CloudCannon Visual Editor to test all features. The page h
 |-----------|------|---------------------|
 | `callout` (variable arg) | auto-mirror | `calloutType` |
 | `callout` (literal `"info"`) | auto-mirror | display only |
-| `prose` | browser override | `sampleMarkdown` |
+| `prose` | auto-mirror (markdown-it import) | `sampleMarkdown` |
 
 - [ ] `{% callout calloutType %}` renders with the correct CSS class (`callout--warning` for `"warning"`, etc.)
 - [ ] Edit `calloutType` to `"error"` → callout border/background changes colour
@@ -66,8 +68,8 @@ Open this page in the CloudCannon Visual Editor to test all features. The page h
 
 | Tag | Type | Drive it by editing |
 |-----|------|---------------------|
-| `icon` (variable arg) | browser override | `iconName` |
-| `icon` (literal `"envelope"`) | browser override | display only |
+| `icon` (variable arg) | auto-mirror | `iconName` |
+| `icon` (literal `"envelope"`) | auto-mirror | display only |
 
 - [ ] `{% icon iconName %}` renders `<span class="icon icon-star">` (or whatever `iconName` is)
 - [ ] Edit `iconName` to a different value → the `class` attribute on the span updates
@@ -92,7 +94,7 @@ The page-level `{% includeWith %}` call is server-side only — the browser engi
 | `dateToRfc3339` | `sampleDate` |
 | `dateToRfc822` | `sampleDate` |
 | `htmlDateString` | `sampleDate` |
-| `postDate` (browser override) | `sampleDate` |
+| `postDate` (auto-mirror) | `sampleDate` |
 
 - [ ] All four formats render non-empty values for the initial `sampleDate: "2023-11-22"`
 - [ ] Edit `sampleDate` → all four update to the new date
@@ -160,13 +162,13 @@ Fetched lazily from the CloudCannon API when the component renders.
 - [ ] `pkg.author` → `CloudCannon`
 - [ ] `pkg.license` → `MIT`
 
-### `buildEnv` global (globals passthrough)
+### Custom `addGlobalData` (globals passthrough)
 
-Registered server-side via `addGlobalData("buildEnv", …)` and mirrored into the browser bundle via the plugin's `globals: { buildEnv }` option.
+`buildEnv` is a **custom** global the project defines — *not* one of the four 11ty-shipped globals (`page`, `collections`, `eleventy`, `pkg`) the plugin auto-shims. Config-replay doesn't capture `addGlobalData`, so custom global data reaches the browser engine only via the plugin's `globals` passthrough: `addGlobalData("buildEnv", …)` server-side + `globals: { buildEnv }` in the plugin options.
 
 - [ ] `buildEnv.siteName` → `Sendit — ed-regions integration test`
 - [ ] `buildEnv.nodeEnv` → `development` (or whatever `NODE_ENV` was at build)
-- [ ] Both values are identical between the server render and the browser re-render (confirms the passthrough wired the same object into both halves)
+- [ ] Both values are identical between the server render and the browser re-render (confirms the passthrough wired the same custom global into both halves)
 
 ### `inputPathToUrl` (browser port over the page map)
 
@@ -200,44 +202,35 @@ Added `"@cloudcannon/editable-regions": "github:cloudcannon/editable-regions#fix
 
 ### `.eleventy.js`
 
-Made the config function `async` so it can `await import(...)` the ESM plugin. The CJS wrapper (`index.cjs`) can't `require()` an ESM file, but dynamic `import()` in Node.js resolves the `"import"` export condition correctly.
+A standard CommonJS config (`module.exports = function (eleventyConfig) {…}`). It registers `dateToRfc3339`, `dateToRfc822`, `htmlDateString`, and `getNewestCollectionItemDate` server-side — the editable-regions plugin provides browser ports for these automatically, but the 11ty build still needs them registered to render templates that use them at build time (e.g. via `includeWith`). Without this, the build throws `Unknown filter "dateToRfc3339"`.
 
-Also registers `dateToRfc3339`, `dateToRfc822`, `htmlDateString`, and `getNewestCollectionItemDate` server-side. The editable-regions plugin provides browser-side ports for these automatically, but the 11ty build also needs them registered to render any template that uses them at build time (e.g. via `includeWith`). Without this, the build throws `Unknown filter "dateToRfc3339"`.
+#### When does a helper need a browser override?
 
-Added to give a balanced mix of auto-mirror and browser override examples across all three types:
+The plugin auto-mirrors config helpers by **config-replay**: it bundles your real config (via esbuild) and replays it in the browser, capturing every `addFilter`/`addShortcode`/`addLiquidTag`/etc. call. Because the *actual* config is bundled — not `fn.toString()`'d — **closures survive, and so do ordinary npm imports**. esbuild stubs only a fixed set of specifiers: Node built-ins (`node:fs`, `fs`, `path`, …), `@11ty/eleventy` (and subpaths), the plugin itself, and anything you list in `pluginOptions.liquid.browserStub`.
+
+So a helper auto-mirrors **unless it invokes one of those stubbed APIs at render time**. Pure-JS npm deps like Luxon and markdown-it bundle and run in the browser, so helpers using them auto-mirror with no override. The only genuine override case is a helper that hits a stubbed API — here, `fileSize` calling `fs.statSync`.
 
 | Registration | Type | Why |
 |---|---|---|
-| `excerpt` filter | auto-mirror | Pure function, no closure — cleanest possible auto-mirror case |
+| `excerpt` filter | auto-mirror | Pure function, no imports — cleanest auto-mirror case |
+| `length` filter | auto-mirror | Pure function |
 | `stamp` filter | auto-mirror (closure) | Closes over a module-level `buildInfo` — proves config-replay preserves closures (would break under `fn.toString()`) |
-| `callout` paired shortcode | auto-mirror | Pure function, no closure |
-| `buildEnv` global | globals passthrough | `addGlobalData` + plugin `globals` option — mirrors a build-time global into the browser |
-| `isoDate` shortcode | browser override | Closes over Luxon's `DateTime` — not in the browser bundle |
-| `prose` paired shortcode | browser override | Closes over the `md` (markdown-it) instance — not serialisable |
-| `icon` custom tag | browser override | Tags are never auto-mirrored |
-| Plugin config | — | Explicit overrides for all non-portable registrations (existing filters + new shortcodes) |
-
-### Why browser overrides are needed
-
-**Filters (`postDate`, `markdownify`, `wordCount`):**
-- `postDate` references `DateTime` from Luxon, which is not in the browser bundle
-- `markdownify` closes over `md = new MarkdownIt(...)`, which can't be serialised
-- `wordCount` calls `htmlToPlainText` and `plainTextMetadata` defined in the same CJS module — those names don't exist in the browser bundle
-
-**Shortcodes (`isoDate`, `prose`):**
-- `isoDate` closes over Luxon's `DateTime.now()` — not in the browser bundle
-- `prose` closes over the same `md` (markdown-it) instance as `markdownify`
+| `wordCount` filter | auto-mirror (local import) | Imports `site/js/wordCount.js`; pure string ops, bundles fine |
+| `postDate` filter | auto-mirror (npm import) | Uses Luxon `DateTime`; Luxon bundles for the browser. Locale pinned to `en-US` so server and browser match |
+| `markdownify` filter | auto-mirror (npm import) | Closes over a module-level markdown-it instance; both survive bundling |
+| `year` shortcode | auto-mirror | Pure function |
+| `isoDate` shortcode | auto-mirror (npm import) | Uses Luxon; bundles for the browser |
+| `callout` paired shortcode | auto-mirror | Pure function |
+| `prose` paired shortcode | auto-mirror (npm import) | Same markdown-it instance as `markdownify` |
+| `icon` custom tag | auto-mirror | `addLiquidTag` is mirrored; factory uses liquidjs's `Tokenizer`/`evalToken` (liquidjs bundles for the browser) |
+| `fileSize` filter | **browser override (required)** | Calls `fs.statSync`; `node:fs` is stubbed in the browser bundle, so this is the one helper that genuinely needs an override |
+| `buildEnv` custom global | globals passthrough | A *custom* `addGlobalData` value (not an 11ty-shipped global). Config-replay doesn't capture `addGlobalData`, so it reaches the browser only via the plugin's `globals` option |
 
 ### Override files
 
 | File | Purpose |
 |------|---------|
-| `overrides/icon-tag.mjs` | Full LiquidJS tag factory (ESM) — uses `Tokenizer`/`evalToken`/`toPromise` from liquidjs |
-| `overrides/postdate-filter.mjs` | Browser `postDate` using `Intl.DateTimeFormat` to match Luxon's DATE_MED output |
-| `overrides/markdownify-filter.mjs` | Inline implementation covering bold, italic, and inline code patterns |
-| `overrides/wordcount-filter.mjs` | Self-contained word counter without the module-local helpers |
-| `overrides/isodate-shortcode.mjs` | Browser `isoDate` using `new Date().toISOString()` instead of Luxon |
-| `overrides/prose-shortcode.mjs` | Browser `prose` using the same inline markdown logic as `markdownify` |
+| `overrides/filesize-filter.mjs` | Browser stub for `fileSize` (returns `— (server-only)`) — the server filter calls `fs.statSync`, which can't run in the browser |
 
 ### Test page structure
 
@@ -257,13 +250,8 @@ The page-level `{% includeWith %}` calls are server-side only — the browser en
 | File | Change |
 |------|--------|
 | `package.json` | Added `@cloudcannon/editable-regions` GitHub dependency |
-| `.eleventy.js` | Registered plugin + `excerpt`, `stamp` (closure), `callout`, `isoDate`, `prose`, `icon`, and `buildEnv` global (mirrored via the plugin's `globals` option) |
-| `overrides/icon-tag.mjs` | Browser implementation of `icon` custom tag |
-| `overrides/postdate-filter.mjs` | Browser-compatible `postDate` filter |
-| `overrides/markdownify-filter.mjs` | Browser-compatible `markdownify` filter |
-| `overrides/wordcount-filter.mjs` | Browser-compatible `wordCount` filter |
-| `overrides/isodate-shortcode.mjs` | Browser-compatible `isoDate` shortcode |
-| `overrides/prose-shortcode.mjs` | Browser-compatible `prose` paired shortcode |
+| `.eleventy.js` | CJS config; registers auto-mirror helpers (`excerpt`, `length`, `stamp`, `wordCount`, `postDate`, `markdownify`, `year`, `isoDate`, `callout`, `prose`, `icon`), the one genuine override (`fileSize`), and the `buildEnv` global (mirrored via the plugin's `globals` option) |
+| `overrides/filesize-filter.mjs` | Browser stub for the `fileSize` filter — the only required override (`fs.statSync` can't run in the browser) |
 | `site/_includes/layouts/test-shell.liquid` | Minimal layout that loads `register-components.js` |
 | `site/_includes/ed-regions-custom-features.liquid` | Block 1 component template |
 | `site/_includes/ed-regions-derived-globals.liquid` | Block 2 component template |

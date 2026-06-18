@@ -102,8 +102,8 @@
 </div>
 
 <div class="test-group">
-  <h3 class="test-group__label">globals passthrough (buildEnv)</h3>
-  <p class="test-group__note">A custom global registered server-side with <code>addGlobalData("buildEnv", …)</code> and mirrored into live editing via the plugin's <code>globals: { buildEnv }</code> option. Confirms the generic globals passthrough wires the same object into the browser bundle.</p>
+  <h3 class="test-group__label">custom addGlobalData (globals passthrough)</h3>
+  <p class="test-group__note"><code>buildEnv</code> is a <strong>custom</strong> global the project defines with <code>addGlobalData("buildEnv", …)</code> — not one of the four globals 11ty ships (<code>page</code>, <code>collections</code>, <code>eleventy</code>, <code>pkg</code> above), which the plugin shims automatically. Config-replay doesn't capture <code>addGlobalData</code>, so a custom global only reaches the browser engine when handed over explicitly via the plugin's <code>globals: { buildEnv }</code> option. This section confirms that passthrough works.</p>
 
   <div class="test-section">
     <div class="test-section__header">

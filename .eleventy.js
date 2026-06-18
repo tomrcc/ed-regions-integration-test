@@ -5,6 +5,8 @@ const { wordCountCallback } = require("./site/js/wordCount");
 const MarkdownIt = require("markdown-it"),
   md = new MarkdownIt({ html: true });
 const editableRegions = require("@cloudcannon/editable-regions/eleventy");
+const { Tokenizer, evalToken, toPromise } = require("liquidjs");
+const fs = require("node:fs");
 
 // Module-level value the `stamp` filter below closes over. The plugin bundles
 // the real config and replays it in the browser, so this closure survives into
@@ -35,30 +37,42 @@ module.exports = function (eleventyConfig) {
     },
   );
 
-  // --- Existing filters ---
+  // --- Existing filters. These all AUTO-MIRROR: config-replay bundles the real
+  //     config, so closures and ordinary npm imports (luxon, markdown-it)
+  //     survive into the browser bundle. No overrides needed. ---
   eleventyConfig.addFilter("length", (input) => input.length);
+  // postDate uses Luxon (bundles for the browser). Coerce strings to Date so a
+  // front-matter value like "2023-11-22" works, and pin the locale so the
+  // server render and the auto-mirrored browser render produce identical output.
   eleventyConfig.addFilter("postDate", (dateObj) =>
-    DateTime.fromJSDate(dateObj).toLocaleString(DateTime.DATE_MED),
+    DateTime.fromJSDate(dateObj instanceof Date ? dateObj : new Date(dateObj))
+      .setLocale("en-US")
+      .toLocaleString(DateTime.DATE_MED),
   );
   eleventyConfig.addPlugin(emojiReadTime, { showEmoji: false });
+  // wordCount imports a local module (site/js/wordCount.js) — bundled too.
   eleventyConfig.addFilter("wordCount", wordCountCallback);
+  // markdownify closes over the module-level markdown-it instance — both the
+  // closure and markdown-it itself survive bundling, so it auto-mirrors.
   eleventyConfig.addFilter("markdownify", (markdown) => md.render(markdown));
   eleventyConfig.addShortcode("year", () => `${new Date().getFullYear()}`);
 
-  // --- New: paired shortcode — auto-mirror (pure function, no imports) ---
+  // --- Paired shortcode — auto-mirror (pure function, no imports) ---
   eleventyConfig.addPairedShortcode(
     "callout",
     (content, type = "info") =>
       `<div class="callout callout--${type}" role="note">${content}</div>`,
   );
 
-  // --- New: paired shortcode — browser override (closes over md instance) ---
+  // --- Paired shortcode — auto-mirror. Closes over the same markdown-it
+  //     instance as markdownify; both survive bundling. ---
   eleventyConfig.addPairedShortcode(
     "prose",
     (content) => `<div class="prose">${md.render(content)}</div>`,
   );
 
-  // --- New: shortcode — browser override (closes over DateTime from Luxon) ---
+  // --- Shortcode — auto-mirror. Uses Luxon's DateTime (bundles for the
+  //     browser). Display-only: build time vs render time differ. ---
   eleventyConfig.addShortcode(
     "isoDate",
     () => DateTime.now().toISO(),
@@ -79,26 +93,41 @@ module.exports = function (eleventyConfig) {
       : "",
   );
 
-  // --- New: custom Liquid tag (server-side factory, browser side via overrides/icon-tag.mjs) ---
+  // --- Custom Liquid tag — auto-mirror. The factory uses liquidjs's
+  //     Tokenizer/evalToken (pulled via require; liquidjs bundles for the
+  //     browser), so the same `{% icon %}` tag works server- and browser-side
+  //     with no override. (`addLiquidTag` is mirrored like any other helper.) ---
   eleventyConfig.addLiquidTag("icon", function iconTagFactory() {
     return {
       parse(tagToken) {
-        this.rawArg = tagToken.args.trim();
+        const tokenizer = new Tokenizer(
+          tagToken.args,
+          this.liquid.options.operatorsTrie,
+        );
+        this.nameToken = tokenizer.readValue();
+        if (!this.nameToken) throw new Error("icon: missing name argument");
       },
-      render(ctx) {
-        const isQuoted = /^['"].*['"]$/.test(this.rawArg);
-        const name = isQuoted
-          ? this.rawArg.slice(1, -1)
-          : ctx.get(this.rawArg);
-        return `<span class="icon icon-${name || this.rawArg}" aria-hidden="true"></span>`;
+      async render(context) {
+        const name = await toPromise(evalToken(this.nameToken, context));
+        return `<span class="icon icon-${name}" aria-hidden="true"></span>`;
       },
     };
   });
 
-  // --- New: custom global data, mirrored into live editing via `globals` ---
-  //     11ty doesn't surface process.env to templates, so expose selected
-  //     values as global data server-side, then mirror the same object into the
-  //     editor via the plugin's `globals` passthrough so both halves agree.
+  // --- Genuinely non-portable filter — the ONLY override case. Reads a file
+  //     size from disk via fs.statSync; `node:fs` is stubbed in the browser
+  //     bundle (it can't run there), so this REQUIRES a browser override
+  //     (overrides/filesize-filter.mjs). This is the real trigger for an
+  //     override: invoking a Node/build-time API at render time. ---
+  eleventyConfig.addFilter("fileSize", (filePath) => fs.statSync(filePath).size);
+
+  // --- CUSTOM global data via addGlobalData ---
+  //     The four globals 11ty ships (`page`, `collections`, `eleventy`, `pkg`)
+  //     are shimmed by the plugin automatically — no passthrough needed. This is
+  //     a *custom* global the project defines itself. Config-replay only mirrors
+  //     helper registrations (addFilter/addShortcode/addLiquidTag), NOT
+  //     addGlobalData — so a custom global like this is invisible to the browser
+  //     engine unless it's handed over explicitly (see `globals` below).
   const buildEnv = {
     siteName: "Sendit — ed-regions integration test",
     nodeEnv: process.env.NODE_ENV || "development",
@@ -109,28 +138,17 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPlugin(editableRegions, {
     liquid: {
       extensions: [".liquid", ".html"],
-      tags: {
-        icon: "./overrides/icon-tag.mjs",
-      },
+      // The only browser override needed: `fileSize` calls fs.statSync, which
+      // can't run in the browser. Everything else — filters, shortcodes, the
+      // custom tag — auto-mirrors via config-replay; closures and bundled npm
+      // imports (luxon, markdown-it, liquidjs) survive into the browser bundle.
       filters: {
-        // postDate and markdownify depend on Luxon/markdown-it, which aren't
-        // available in the browser bundle — provide portable replacements.
-        postDate: "./overrides/postdate-filter.mjs",
-        markdownify: "./overrides/markdownify-filter.mjs",
-        // wordCount references module-local helpers, so can't be auto-mirrored.
-        wordCount: "./overrides/wordcount-filter.mjs",
-      },
-      shortcodes: {
-        // isoDate closes over DateTime from Luxon.
-        isoDate: "./overrides/isodate-shortcode.mjs",
-      },
-      pairedShortcodes: {
-        // prose closes over the md (markdown-it) instance.
-        prose: "./overrides/prose-shortcode.mjs",
+        fileSize: "./overrides/filesize-filter.mjs",
       },
     },
-    // Mirror the `buildEnv` global data into live editing so the browser
-    // re-render sees the same values the server build exposed.
+    // `globals` is the passthrough for CUSTOM global data (values added with
+    // addGlobalData that aren't one of 11ty's auto-shimmed built-ins). Hand the
+    // same `buildEnv` object to the browser engine so live editing resolves it.
     globals: { buildEnv },
   });
 
