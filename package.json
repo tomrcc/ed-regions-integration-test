@@ -3,13 +3,8 @@
   "version": "1.0.1",
   "description": "Sendit is a email marketing tool which ensure the business growth",
   "scripts": {
-    "bookshop:watch": "bookshop-browser",
-    "bookshop-sass:fetch-theme-color": "node site/js/fetch-theme-color.js",
-    "bookshop-sass:build": "bookshop-sass -b component-library -o site/css/theme.css",
-    "bookshop-sass:watch": "bookshop-sass -b component-library -o site/css/theme.css -w",
     "eleventy:build": "ELEVENTY_ENV=production eleventy",
     "eleventy:watch": "ELEVENTY_ENV=development eleventy --serve",
-    "start": "npm-run-all bookshop-sass:fetch-theme-color bookshop-sass:build --parallel bookshop-sass:watch bookshop:watch eleventy:watch",
     "build": "npx @11ty/eleventy --output _site"
   },
   "author": "CloudCannon",
@@ -17,16 +12,10 @@
   "dependencies": {
     "@11ty/eleventy": "^3.1.2",
     "@11tyrocks/eleventy-plugin-emoji-readtime": "^1.0.1",
-    "@bookshop/eleventy-bookshop": "3.16.3",
-    "@bookshop/eleventy-engine": "3.16.3",
-    "@bookshop/generate": "3.16.3",
     "@cloudcannon/editable-regions": "github:cloudcannon/editable-regions#fix/11ty-follow-up",
     "eleventy-plugin-wordcount": "^1.0.5",
     "markdown-it": "^13.0.1",
     "npm-run-all": "^4.1.5",
     "punycode": "^2.1.1"
-  },
-  "devDependencies": {
-    "@bookshop/sass": "3.16.3"
   }
 }
