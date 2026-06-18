@@ -6,6 +6,13 @@ const MarkdownIt = require("markdown-it"),
   md = new MarkdownIt({ html: true });
 const editableRegions = require("@cloudcannon/editable-regions/eleventy");
 
+// Module-level value the `stamp` filter below closes over. The plugin bundles
+// the real config and replays it in the browser, so this closure survives into
+// the browser bundle. The old fn.toString() approach couldn't capture
+// `buildInfo` (a free identifier with no browser-side scope), so the browser
+// render would throw — this is the closure-survival auto-mirror probe.
+const buildInfo = { label: "build-closure-ok" };
+
 module.exports = function (eleventyConfig) {
 
   // --- Built-in browser ports — must also be registered server-side so the
@@ -57,6 +64,11 @@ module.exports = function (eleventyConfig) {
     () => DateTime.now().toISO(),
   );
 
+  // --- New: auto-mirror filter that CLOSES OVER a module-level value ---
+  //     Verifies the config-replay mirror (not fn.toString()) carries closures
+  //     into the browser bundle. No override needed; browser must match server.
+  eleventyConfig.addFilter("stamp", (str) => `${str} [${buildInfo.label}]`);
+
   // --- New: portable filter (clean auto-mirror test — pure function, no imports) ---
   eleventyConfig.addFilter("excerpt", (str, len = 120) =>
     str
@@ -83,6 +95,16 @@ module.exports = function (eleventyConfig) {
     };
   });
 
+  // --- New: custom global data, mirrored into live editing via `globals` ---
+  //     11ty doesn't surface process.env to templates, so expose selected
+  //     values as global data server-side, then mirror the same object into the
+  //     editor via the plugin's `globals` passthrough so both halves agree.
+  const buildEnv = {
+    siteName: "Sendit — ed-regions integration test",
+    nodeEnv: process.env.NODE_ENV || "development",
+  };
+  eleventyConfig.addGlobalData("buildEnv", buildEnv);
+
   // --- Editable regions plugin ---
   eleventyConfig.addPlugin(editableRegions, {
     liquid: {
@@ -107,6 +129,9 @@ module.exports = function (eleventyConfig) {
         prose: "./overrides/prose-shortcode.mjs",
       },
     },
+    // Mirror the `buildEnv` global data into live editing so the browser
+    // re-render sees the same values the server build exposed.
+    globals: { buildEnv },
   });
 
   // --- Existing plugins and passthrough ---

@@ -1,0 +1,35 @@
+---
+title: Templated Permalink Probe
+# Templated permalink: the URL is computed by the template engine, not a literal
+# string. The live front-matter read can't resolve this — so the page/collections
+# proxies and inputPathToUrl must fall back to the build-time page map. Expected
+# resolved URL: /ed-regions-templated/templated-permalink-probe/
+permalink: "/ed-regions-templated/{{ title | slug }}/"
+layout: layouts/test-shell.liquid
+date: 2024-06-15
+_schema: ed-regions-test
+derivedGlobalsDemo:
+  note: "Templated-permalink probe — page.url below must resolve via the page map"
+---
+
+<section class="editable-block">
+  <h2 class="block-label">
+    Templated Permalink Probe
+    <small>(page proxy must resolve a templated permalink via the page map)</small>
+  </h2>
+  <p class="test-group__note">
+    This page's <code>permalink</code> is a Liquid template
+    (<code>/ed-regions-templated/{% raw %}{{ title | slug }}{% endraw %}/</code>),
+    not a literal. Open this page in the Visual Editor and confirm
+    <code>page.url</code> in the block below resolves to
+    <code>/ed-regions-templated/templated-permalink-probe/</code> — proving the
+    browser proxy reads the build-time page map rather than the raw front matter.
+  </p>
+  <div
+    data-editable="component"
+    data-component="ed-regions-derived-globals"
+    data-prop="derivedGlobalsDemo"
+  >
+    {% includeWith "ed-regions-derived-globals", derivedGlobalsDemo %}
+  </div>
+</section>

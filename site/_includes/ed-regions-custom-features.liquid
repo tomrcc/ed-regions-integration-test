@@ -30,6 +30,17 @@
 
   <div class="test-section">
     <div class="test-section__header">
+      <code>stamp</code>
+      <span class="tag tag--auto-mirror">auto-mirror (closure)</span>
+      <span class="tag tag--edit">edit: sampleText</span>
+    </div>
+    <p class="test-section__desc">Closes over a module-level <code>buildInfo</code> object in <code>.eleventy.js</code>. The plugin bundles the real config and replays it, so the closure survives — this auto-mirrors with no override and the browser output must match the server. If it regressed to <code>fn.toString()</code>, <code>buildInfo</code> would be undefined in the browser and the re-render would break.</p>
+    <div class="test-section__output">{{ sampleText | stamp }}</div>
+    <div class="test-section__raw">Expression: <code>sampleText | stamp</code> → expect suffix <code>[build-closure-ok]</code></div>
+  </div>
+
+  <div class="test-section">
+    <div class="test-section__header">
       <code>wordCount</code>
       <span class="tag tag--override">browser override</span>
       <span class="tag tag--edit">edit: sampleText</span>

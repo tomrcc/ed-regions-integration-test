@@ -23,16 +23,18 @@ Open this page in the CloudCannon Visual Editor to test all features. The page h
 |--------|------|---------------------|-----------------|
 | `excerpt` | auto-mirror | `sampleText` | First 60 chars of text, truncated with `…` |
 | `length` | auto-mirror | `sampleText` | Character count of the string |
+| `stamp` | auto-mirror (closure) | `sampleText` | `sampleText` with a `[build-closure-ok]` suffix |
 | `wordCount` | browser override | `sampleText` | Word count of the string |
 | `postDate` | browser override | `sampleDate` | Date in `MMM D, YYYY` format (e.g. `Nov 22, 2023`) |
 | `markdownify` | browser override | `sampleMarkdown` | Rendered HTML — bold, italic, code |
 
 - [ ] `excerpt` renders a truncated version of `sampleText`
 - [ ] `length` renders a number matching the character count of `sampleText`
+- [ ] `stamp` renders `sampleText` followed by `[build-closure-ok]` — and the browser re-render matches the server output (proves the closure over the module-level `buildInfo` survived auto-mirror; under `fn.toString()` the browser re-render would break)
 - [ ] `wordCount` renders a number matching the word count of `sampleText`
 - [ ] `postDate` renders `sampleDate` formatted as `Nov 22, 2023` (or equivalent)
 - [ ] `markdownify` renders `**bold**` as `<strong>bold</strong>`, `_italic_` as `<em>italic</em>`, `` `code` `` as `<code>code</code>`
-- [ ] Edit `sampleText` → `excerpt`, `length`, and `wordCount` all update
+- [ ] Edit `sampleText` → `excerpt`, `length`, `stamp`, and `wordCount` all update
 - [ ] Edit `sampleDate` → `postDate` updates
 - [ ] Edit `sampleMarkdown` → `markdownify` output updates
 
@@ -148,6 +150,46 @@ Fetched lazily from the CloudCannon API when the component renders.
 - [ ] `eleventy.directories.includes` → `_includes` (or full path)
 - [ ] `eleventy.directories.output` → `_site` (or full path)
 
+### `pkg` global (package.json mirrored verbatim, build-time)
+
+11ty exposes the project's `package.json` as the `pkg` global; the browser bundle mirrors it verbatim.
+
+- [ ] `pkg.name` → `sendit_eleventy`
+- [ ] `pkg.version` → `1.0.1`
+- [ ] `pkg.description` → non-empty (the Sendit description string)
+- [ ] `pkg.author` → `CloudCannon`
+- [ ] `pkg.license` → `MIT`
+
+### `buildEnv` global (globals passthrough)
+
+Registered server-side via `addGlobalData("buildEnv", …)` and mirrored into the browser bundle via the plugin's `globals: { buildEnv }` option.
+
+- [ ] `buildEnv.siteName` → `Sendit — ed-regions integration test`
+- [ ] `buildEnv.nodeEnv` → `development` (or whatever `NODE_ENV` was at build)
+- [ ] Both values are identical between the server render and the browser re-render (confirms the passthrough wired the same object into both halves)
+
+### `inputPathToUrl` (browser port over the page map)
+
+11ty's built-in filter; the browser port resolves an input path against the build-time page map.
+
+- [ ] `"./site/pages/ed-regions-test.html" | inputPathToUrl` → `/ed-regions-test/`
+- [ ] `"./site/pages/ed-regions-templated-permalink.html" | inputPathToUrl` → `/ed-regions-templated/templated-permalink-probe/` — resolves a **templated** permalink, which only the page map can supply
+
+---
+
+## Block 3: Templated permalink probe
+
+**Test page:** `/ed-regions-templated/templated-permalink-probe/`
+**Source:** `site/pages/ed-regions-templated-permalink.html`
+**Front matter key:** `derivedGlobalsDemo` (reuses the Block 2 component)
+
+This page's `permalink` is a Liquid template (`/ed-regions-templated/{{ title | slug }}/`), not a literal string. The live front-matter read can't compute that URL, so the page/collections proxies must fall back to the build-time page map. Open **this page** (not `/ed-regions-test/`) in the Visual Editor to test.
+
+- [ ] Page builds and is reachable at `/ed-regions-templated/templated-permalink-probe/`
+- [ ] In the editor, `page.url` in the embedded Block 2 component resolves to `/ed-regions-templated/templated-permalink-probe/` (not the raw `{{ title | slug }}` template, and not empty)
+- [ ] `page.outputPath` → something like `_site/ed-regions-templated/templated-permalink-probe/index.html`
+- [ ] Editing `derivedGlobalsDemo.note` re-renders the component (confirms the browser engine is running on this page too)
+
 ---
 
 ## What was built and why
@@ -167,7 +209,9 @@ Added to give a balanced mix of auto-mirror and browser override examples across
 | Registration | Type | Why |
 |---|---|---|
 | `excerpt` filter | auto-mirror | Pure function, no closure — cleanest possible auto-mirror case |
+| `stamp` filter | auto-mirror (closure) | Closes over a module-level `buildInfo` — proves config-replay preserves closures (would break under `fn.toString()`) |
 | `callout` paired shortcode | auto-mirror | Pure function, no closure |
+| `buildEnv` global | globals passthrough | `addGlobalData` + plugin `globals` option — mirrors a build-time global into the browser |
 | `isoDate` shortcode | browser override | Closes over Luxon's `DateTime` — not in the browser bundle |
 | `prose` paired shortcode | browser override | Closes over the `md` (markdown-it) instance — not serialisable |
 | `icon` custom tag | browser override | Tags are never auto-mirrored |
@@ -213,7 +257,7 @@ The page-level `{% includeWith %}` calls are server-side only — the browser en
 | File | Change |
 |------|--------|
 | `package.json` | Added `@cloudcannon/editable-regions` GitHub dependency |
-| `.eleventy.js` | Made async; registered plugin + new `excerpt`, `callout`, `isoDate`, `prose`, `icon` |
+| `.eleventy.js` | Registered plugin + `excerpt`, `stamp` (closure), `callout`, `isoDate`, `prose`, `icon`, and `buildEnv` global (mirrored via the plugin's `globals` option) |
 | `overrides/icon-tag.mjs` | Browser implementation of `icon` custom tag |
 | `overrides/postdate-filter.mjs` | Browser-compatible `postDate` filter |
 | `overrides/markdownify-filter.mjs` | Browser-compatible `markdownify` filter |
@@ -225,3 +269,4 @@ The page-level `{% includeWith %}` calls are server-side only — the browser en
 | `site/_includes/ed-regions-derived-globals.liquid` | Block 2 component template |
 | `site/_includes/ed-regions-date-display.liquid` | Sub-partial rendered via `includeWith` inside Block 1 |
 | `site/pages/ed-regions-test.html` | Test page with two `data-editable="component"` blocks |
+| `site/pages/ed-regions-templated-permalink.html` | Block 3 — page with a templated permalink; forces page-map URL resolution |

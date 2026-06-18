@@ -80,3 +80,59 @@
     </dl>
   </div>
 </div>
+
+<div class="test-group">
+  <h3 class="test-group__label">pkg global</h3>
+  <p class="test-group__note">11ty exposes the project's <code>package.json</code> as the <code>pkg</code> global. The browser bundle mirrors it verbatim at build time. Values below should match this repo's <code>package.json</code>.</p>
+
+  <div class="test-section">
+    <div class="test-section__header">
+      <code>pkg.name</code> · <code>pkg.version</code> · <code>pkg.author</code> · etc.
+      <span class="tag tag--static">static (build-time)</span>
+      <span class="tag tag--display-only">display only</span>
+    </div>
+    <dl class="test-section__output">
+      <dt>pkg.name</dt><dd>{{ pkg.name }}</dd>
+      <dt>pkg.version</dt><dd>{{ pkg.version }}</dd>
+      <dt>pkg.description</dt><dd>{{ pkg.description }}</dd>
+      <dt>pkg.author</dt><dd>{{ pkg.author }}</dd>
+      <dt>pkg.license</dt><dd>{{ pkg.license }}</dd>
+    </dl>
+  </div>
+</div>
+
+<div class="test-group">
+  <h3 class="test-group__label">globals passthrough (buildEnv)</h3>
+  <p class="test-group__note">A custom global registered server-side with <code>addGlobalData("buildEnv", …)</code> and mirrored into live editing via the plugin's <code>globals: { buildEnv }</code> option. Confirms the generic globals passthrough wires the same object into the browser bundle.</p>
+
+  <div class="test-section">
+    <div class="test-section__header">
+      <code>buildEnv.siteName</code> · <code>buildEnv.nodeEnv</code>
+      <span class="tag tag--static">static (build-time)</span>
+      <span class="tag tag--display-only">display only</span>
+    </div>
+    <dl class="test-section__output">
+      <dt>buildEnv.siteName</dt><dd>{{ buildEnv.siteName }}</dd>
+      <dt>buildEnv.nodeEnv</dt><dd>{{ buildEnv.nodeEnv }}</dd>
+    </dl>
+  </div>
+</div>
+
+<div class="test-group">
+  <h3 class="test-group__label">inputPathToUrl + page map</h3>
+  <p class="test-group__note">11ty's built-in <code>inputPathToUrl</code> filter. The browser port resolves an input path against the build-time page map. The second row points at a page with a <em>templated</em> permalink — the live front-matter read can't compute that URL, so it must come from the page map. A miss warns once and passes the input through unchanged.</p>
+
+  <div class="test-section">
+    <div class="test-section__header">
+      <code>inputPathToUrl</code>
+      <span class="tag tag--builtin">built-in port</span>
+      <span class="tag tag--display-only">display only</span>
+    </div>
+    <dl class="test-section__output">
+      <dt>"./site/pages/ed-regions-test.html" | inputPathToUrl</dt>
+      <dd>{{ "./site/pages/ed-regions-test.html" | inputPathToUrl }}</dd>
+      <dt>"./site/pages/ed-regions-templated-permalink.html" | inputPathToUrl (templated permalink)</dt>
+      <dd>{{ "./site/pages/ed-regions-templated-permalink.html" | inputPathToUrl }}</dd>
+    </dl>
+  </div>
+</div>
