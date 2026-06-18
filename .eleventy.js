@@ -1,4 +1,3 @@
-const pluginBookshop = require("@bookshop/eleventy-bookshop");
 const { DateTime } = require("luxon");
 const emojiReadTime = require("@11tyrocks/eleventy-plugin-emoji-readtime");
 const { wordCountCallback } = require("./site/js/wordCount");
@@ -16,7 +15,6 @@ const fs = require("node:fs");
 const buildInfo = { label: "build-closure-ok" };
 
 module.exports = function (eleventyConfig) {
-
   // --- Built-in browser ports — must also be registered server-side so the
   //     11ty build can render templates that use them (e.g. via includeWith).
   //     The editable-regions plugin handles the browser side automatically.
@@ -25,17 +23,14 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addFilter("htmlDateString", (d) =>
     new Date(d).toISOString().slice(0, 10),
   );
-  eleventyConfig.addFilter(
-    "getNewestCollectionItemDate",
-    (collection) => {
-      if (!Array.isArray(collection) || collection.length === 0)
-        return new Date(0);
-      return collection.reduce((newest, item) => {
-        const d = new Date(item?.date ?? 0);
-        return d > newest ? d : newest;
-      }, new Date(0));
-    },
-  );
+  eleventyConfig.addFilter("getNewestCollectionItemDate", (collection) => {
+    if (!Array.isArray(collection) || collection.length === 0)
+      return new Date(0);
+    return collection.reduce((newest, item) => {
+      const d = new Date(item?.date ?? 0);
+      return d > newest ? d : newest;
+    }, new Date(0));
+  });
 
   // --- Existing filters. These all AUTO-MIRROR: config-replay bundles the real
   //     config, so closures and ordinary npm imports (luxon, markdown-it)
@@ -73,10 +68,7 @@ module.exports = function (eleventyConfig) {
 
   // --- Shortcode — auto-mirror. Uses Luxon's DateTime (bundles for the
   //     browser). Display-only: build time vs render time differ. ---
-  eleventyConfig.addShortcode(
-    "isoDate",
-    () => DateTime.now().toISO(),
-  );
+  eleventyConfig.addShortcode("isoDate", () => DateTime.now().toISO());
 
   // --- New: auto-mirror filter that CLOSES OVER a module-level value ---
   //     Verifies the config-replay mirror (not fn.toString()) carries closures
@@ -119,7 +111,10 @@ module.exports = function (eleventyConfig) {
   //     bundle (it can't run there), so this REQUIRES a browser override
   //     (overrides/filesize-filter.mjs). This is the real trigger for an
   //     override: invoking a Node/build-time API at render time. ---
-  eleventyConfig.addFilter("fileSize", (filePath) => fs.statSync(filePath).size);
+  eleventyConfig.addFilter(
+    "fileSize",
+    (filePath) => fs.statSync(filePath).size,
+  );
 
   // --- CUSTOM global data via addGlobalData ---
   //     The four globals 11ty ships (`page`, `collections`, `eleventy`, `pkg`)
@@ -154,12 +149,6 @@ module.exports = function (eleventyConfig) {
 
   // --- Existing plugins and passthrough ---
   eleventyConfig.htmlTemplateEngine = "liquid";
-  eleventyConfig.addPlugin(
-    pluginBookshop({
-      bookshopLocations: ["component-library"],
-      pathPrefix: "",
-    }),
-  );
   eleventyConfig.addPassthroughCopy("site/css");
   eleventyConfig.addPassthroughCopy("site/fonts");
   eleventyConfig.addPassthroughCopy("site/images");
